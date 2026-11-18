@@ -32,7 +32,7 @@ jobs:
           token = os.environ.get("WATCHER_CRON_SECRET")
 
           if not token:
-              print("Missing GitHub Actions secret.")
+              print("ERROR: Missing GitHub Actions secret.")
               sys.exit(1)
 
           data = json.dumps({"json": {"token": token}}).encode()
@@ -47,12 +47,22 @@ jobs:
               method="POST"
           )
 
+          def show_response(body):
+              text = body.decode("utf-8", errors="replace")
+              text = text.replace(token, "[REDACTED]")
+              print("Paystamped response:")
+              print(text[:4096] if text else "[Empty response body]")
+
           try:
               with urllib.request.urlopen(request, timeout=55) as response:
-                  print(f"Paystamped watcher responded: HTTP {response.status}")
+                  print(f"HTTP Status: {response.status}")
+                  show_response(response.read(4096))
+
           except urllib.error.HTTPError as error:
-              print(f"Paystamped returned HTTP {error.code}")
+              print(f"HTTP Error: {error.code}")
+              show_response(error.read(4096))
               sys.exit(1)
+
           except Exception as error:
               print(f"Request failed: {type(error).__name__}")
               sys.exit(1)
