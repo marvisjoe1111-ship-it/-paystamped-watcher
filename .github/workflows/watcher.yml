@@ -36,7 +36,7 @@ jobs:
 
           data = json.dumps({"json": {"token": token}}).encode()
 
-                    request = urllib.request.Request(
+          request = urllib.request.Request(
               "https://paystamped-ji3sbsl2.teamily.run/trpc/watcher.cron",
               data=data,
               headers={
@@ -44,7 +44,6 @@ jobs:
                   "User-Agent": "paystamped-watcher-cron/1.0"
               },
               method="POST"
-          )"
           )
 
           try:
