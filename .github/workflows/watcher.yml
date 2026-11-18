@@ -1,0 +1,55 @@
+name: Paystamped Watcher
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: paystamped-watcher
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Trigger Paystamped watcher
+        env:
+          WATCHER_CRON_SECRET: ${{ secrets.WATCHER_CRON_SECRET }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.request
+          import urllib.error
+
+          token = os.environ.get("WATCHER_CRON_SECRET")
+          if not token:
+              print("Missing GitHub Actions secret.")
+              sys.exit(1)
+
+          data = json.dumps({"json": {"token": token}}).encode()
+
+          request = urllib.request.Request(
+              "https://paystamped-ji3sbsl2.teamily.run/trpc/watcher.cron",
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST"
+          )
+
+          try:
+              with urllib.request.urlopen(request, timeout=55) as response:
+                  print(f"Paystamped watcher responded: HTTP {response.status}")
+          except urllib.error.HTTPError as error:
+              print(f"Paystamped returned HTTP {error.code}")
+              sys.exit(1)
+          except Exception as error:
+              print(f"Request failed: {type(error).__name__}")
+              sys.exit(1)
+          PY
