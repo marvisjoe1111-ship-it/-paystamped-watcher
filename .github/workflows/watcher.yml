@@ -30,6 +30,7 @@ jobs:
           import urllib.error
 
           token = os.environ.get("WATCHER_CRON_SECRET")
+
           if not token:
               print("Missing GitHub Actions secret.")
               sys.exit(1)
